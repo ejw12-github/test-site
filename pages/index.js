@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <div style={{ textAlign: "center", marginTop: "50px", text-align: "center" }}>
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>FTCMetrics</h1>
       <h3>Currently in development... please return later!</h3>
       <h3>If you want to test it, go to ftcmetrics.vercel.app/teams/(your team number)</h3>
