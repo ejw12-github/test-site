@@ -22,7 +22,6 @@ export default function TeamPage() {
           teamByNumber(number: $number) {
             name
             schoolName
-            sponsors
             rookieYear
             location {
               city
@@ -83,6 +82,7 @@ export default function TeamPage() {
               teamMatches(teamNumber: $team) {
                 match {
                   id
+                  matchNum
                   scores {
                     ... on MatchScores2024 {
                       red { totalPoints }
@@ -117,15 +117,11 @@ export default function TeamPage() {
           const matches =
             json?.data?.eventByCode?.teamMatches?.map((m) => m.match) || [];
 
-          matchesObj[e.event.code] = matches.sort(
-            (a, b) => a.id - b.id
-          );
+          matchesObj[e.event.code] = matches
+            .filter((m) => m.matchNum < 10000)
+            .sort((a, b) => a.id - b.id);
         }
         setMatchesByEvent(matchesObj);
-      } else {
-        setTeam(null);
-        setStats({});
-        setEvents([]);
       }
 
       setLoading(false);
@@ -159,15 +155,15 @@ export default function TeamPage() {
 
   function renderMatchTable(matches) {
     return (
-      <table style={{ width: "100%", marginTop: "1em", fontSize: "0.9rem" }}>
+      <table style={{ width: "100%", marginTop: "1em", fontSize: "0.9rem", borderCollapse: "collapse" }}>
         <thead>
           <tr>
-            <th>Red 1</th>
-            <th>Red 2</th>
-            <th>Red Score</th>
-            <th>Blue Score</th>
-            <th>Blue 2</th>
-            <th>Blue 1</th>
+            <th style={cellStyle}>Red 1</th>
+            <th style={cellStyle}>Red 2</th>
+            <th style={cellStyle}>Red Score</th>
+            <th style={cellStyle}>Blue Score</th>
+            <th style={cellStyle}>Blue 2</th>
+            <th style={cellStyle}>Blue 1</th>
           </tr>
         </thead>
         <tbody>
@@ -186,12 +182,22 @@ export default function TeamPage() {
 
             return (
               <tr key={idx}>
-                <td>{teams.Red[0]}</td>
-                <td>{teams.Red[1]}</td>
-                <td style={{ fontWeight: redWin ? "bold" : "normal" }}>{redScore}</td>
-                <td style={{ fontWeight: blueWin ? "bold" : "normal" }}>{blueScore}</td>
-                <td>{teams.Blue[1]}</td>
-                <td>{teams.Blue[0]}</td>
+                <td style={{ ...cellStyle, backgroundColor: "#440000" }}>{teams.Red[0]}</td>
+                <td style={{ ...cellStyle, backgroundColor: "#440000" }}>{teams.Red[1]}</td>
+                <td style={{
+                  ...cellStyle,
+                  backgroundColor: "#440000",
+                  color: redWin ? "#f44" : "#fff",
+                  fontWeight: redWin ? "bold" : "normal"
+                }}>{redScore}</td>
+                <td style={{
+                  ...cellStyle,
+                  backgroundColor: "#000044",
+                  color: blueWin ? "#44f" : "#fff",
+                  fontWeight: blueWin ? "bold" : "normal"
+                }}>{blueScore}</td>
+                <td style={{ ...cellStyle, backgroundColor: "#000044" }}>{teams.Blue[1]}</td>
+                <td style={{ ...cellStyle, backgroundColor: "#000044" }}>{teams.Blue[0]}</td>
               </tr>
             );
           })}
@@ -199,6 +205,12 @@ export default function TeamPage() {
       </table>
     );
   }
+
+  const cellStyle = {
+    border: "1px solid #555",
+    padding: "6px",
+    textAlign: "center",
+  };
 
   return (
     <>
@@ -220,23 +232,21 @@ export default function TeamPage() {
         `}</style>
       </Head>
 
-      <main
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          padding: "40px 20px",
-        }}
-      >
+      <main style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        padding: "40px 20px",
+      }}>
         <div style={{ width: "100%", maxWidth: "800px" }}>
           {loading ? (
             <p style={{ fontSize: "1.2rem", textAlign: "center" }}>Loading...</p>
           ) : team ? (
             <>
               <div style={boxStyle}>
-                <h1 style={{ marginBottom: "0.3em", fontSize: "1.8rem", fontWeight: "600" }}>
+                <h1 style={{ fontSize: "1.8rem", fontWeight: "600" }}>
                   {number} – {team.name}
                 </h1>
                 <p style={infoStyle}>{team.schoolName}</p>
@@ -259,7 +269,7 @@ export default function TeamPage() {
                   <h3 style={{ margin: "0 0 0.4em 0" }}>{e.event.name}</h3>
                   <p style={infoStyle}>📅 {formatDate(e.event.start)}</p>
                   <p style={infoStyle}>📍 {e.event.location.city}, {e.event.location.state}, {e.event.location.country}</p>
-                  {matchesByEvent[e.event.code] && renderMatchTable(matchesByEvent[e.event.code])}
+                  {matchesByEvent[e.event.code]?.length > 0 && renderMatchTable(matchesByEvent[e.event.code])}
                 </div>
               ))}
             </>
