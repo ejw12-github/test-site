@@ -38,13 +38,25 @@ export default function TeamPage() {
               event {
                 name
                 start
+                end
                 code
                 location {
+                  venue
                   city
                   state
                   country
                 }
               }
+              rank {
+                rank
+              }
+              record {
+                wins
+                losses
+                ties
+              }
+              rp
+              npAvg
             }
           }
         }
@@ -83,6 +95,7 @@ export default function TeamPage() {
                 match {
                   id
                   matchNum
+                  matchType
                   scores {
                     ... on MatchScores2024 {
                       red { totalPoints }
@@ -118,8 +131,8 @@ export default function TeamPage() {
             json?.data?.eventByCode?.teamMatches?.map((m) => m.match) || [];
 
           matchesObj[e.event.code] = matches
-            .filter((m) => m.matchNum < 10000)
-            .sort((a, b) => a.id - b.id);
+            .filter((m) => m.matchNum < 10000 && m.matchType === "QUAL")
+            .sort((a, b) => a.matchNum - b.matchNum);
         }
         setMatchesByEvent(matchesObj);
       }
@@ -144,13 +157,25 @@ export default function TeamPage() {
     color: "#aaa",
   };
 
-  function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  const cellStyle = {
+    border: "1px solid #555",
+    padding: "6px",
+    textAlign: "center",
+  };
+
+  function formatDateRange(start, end) {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const options = { month: 'short', day: 'numeric' };
+    return `${startDate.toLocaleDateString(undefined, options)} – ${endDate.toLocaleDateString(undefined, options)}, ${endDate.getFullYear()}`;
+  }
+
+  function formatEventMeta(event) {
+    const rankText = event.rank?.rank ? `${event.rank.rank}th place (quals)` : null;
+    const record = event.record ? `W-L-T: ${event.record.wins}-${event.record.losses}-${event.record.ties}` : null;
+    const rp = event.rp ? `${event.rp.toFixed(2)} RP` : null;
+    const np = event.npAvg ? `${event.npAvg.toFixed(2)} npAVG` : null;
+    return [rankText, record, [rp, np].filter(Boolean).join(" · ")].filter(Boolean).join("\n");
   }
 
   function renderMatchTable(matches) {
@@ -158,6 +183,7 @@ export default function TeamPage() {
       <table style={{ width: "100%", marginTop: "1em", fontSize: "0.9rem", borderCollapse: "collapse" }}>
         <thead>
           <tr>
+            <th style={cellStyle}>Q-#</th>
             <th style={cellStyle}>Red 1</th>
             <th style={cellStyle}>Red 2</th>
             <th style={cellStyle}>Red Score</th>
@@ -179,22 +205,24 @@ export default function TeamPage() {
             const blueScore = m.scores?.blue?.totalPoints ?? 0;
             const redWin = redScore > blueScore;
             const blueWin = blueScore > redScore;
+            const tie = redScore === blueScore;
 
             return (
               <tr key={idx}>
+                <td style={{ ...cellStyle, fontWeight: "bold", textAlign: "center" }}>Q-{m.matchNum}</td>
                 <td style={{ ...cellStyle, backgroundColor: "#440000" }}>{teams.Red[0]}</td>
                 <td style={{ ...cellStyle, backgroundColor: "#440000" }}>{teams.Red[1]}</td>
                 <td style={{
                   ...cellStyle,
                   backgroundColor: "#440000",
-                  color: redWin ? "#f44" : "#fff",
-                  fontWeight: redWin ? "bold" : "normal"
+                  color: redWin ? "#f44" : tie ? "#c4f" : "#fff",
+                  fontWeight: redWin || tie ? "bold" : "normal"
                 }}>{redScore}</td>
                 <td style={{
                   ...cellStyle,
                   backgroundColor: "#000044",
-                  color: blueWin ? "#44f" : "#fff",
-                  fontWeight: blueWin ? "bold" : "normal"
+                  color: blueWin ? "#44f" : tie ? "#c4f" : "#fff",
+                  fontWeight: blueWin || tie ? "bold" : "normal"
                 }}>{blueScore}</td>
                 <td style={{ ...cellStyle, backgroundColor: "#000044" }}>{teams.Blue[1]}</td>
                 <td style={{ ...cellStyle, backgroundColor: "#000044" }}>{teams.Blue[0]}</td>
@@ -205,12 +233,6 @@ export default function TeamPage() {
       </table>
     );
   }
-
-  const cellStyle = {
-    border: "1px solid #555",
-    padding: "6px",
-    textAlign: "center",
-  };
 
   return (
     <>
@@ -266,9 +288,14 @@ export default function TeamPage() {
 
               {events.map((e, idx) => (
                 <div key={idx} style={boxStyle}>
-                  <h3 style={{ margin: "0 0 0.4em 0" }}>{e.event.name}</h3>
-                  <p style={infoStyle}>📅 {formatDate(e.event.start)}</p>
-                  <p style={infoStyle}>📍 {e.event.location.city}, {e.event.location.state}, {e.event.location.country}</p>
+                  <h3 style={{ marginBottom: "0.4em" }}>{e.event.name}</h3>
+                  <p style={infoStyle}>{formatDateRange(e.event.start, e.event.end)}</p>
+                  <p style={infoStyle}>
+                    {e.event.location.venue}, {e.event.location.city}, {e.event.location.state}, {e.event.location.country}
+                  </p>
+                  <pre style={{ whiteSpace: "pre-wrap", color: "#ccc", fontSize: "0.9rem" }}>
+                    {formatEventMeta(e)}
+                  </pre>
                   {matchesByEvent[e.event.code]?.length > 0 && renderMatchTable(matchesByEvent[e.event.code])}
                 </div>
               ))}
