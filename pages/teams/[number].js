@@ -5,18 +5,28 @@ import Head from "next/head";
 export default function TeamPage() {
   const router = useRouter();
   const { number } = router.query;
+  const [team, setTeam] = useState(null);
   const [opr, setOpr] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!number) return;
 
-    async function fetchOPR() {
+    async function fetchData() {
       setLoading(true);
 
       const query = `
-        query GetTeamOPR($number: Int!) {
+        query GetTeamData($number: Int!) {
           teamByNumber(number: $number) {
+            name
+            schoolName
+            sponsors
+            rookieYear
+            location {
+              city
+              state
+              country
+            }
             quickStats(season: 2024) {
               tot {
                 value
@@ -29,17 +39,26 @@ export default function TeamPage() {
       const res = await fetch("https://api.ftcscout.org/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, variables: { number: parseInt(number) } }),
+        body: JSON.stringify({
+          query,
+          variables: { number: parseInt(number) },
+        }),
       });
 
       const json = await res.json();
-      const value = json?.data?.teamByNumber?.quickStats?.tot?.value;
+      const data = json?.data?.teamByNumber;
+      if (!data) {
+        setTeam(null);
+        setOpr(null);
+      } else {
+        setTeam(data);
+        setOpr(data.quickStats?.tot?.value ?? "N/A");
+      }
 
-      setOpr(value ?? "N/A");
       setLoading(false);
     }
 
-    fetchOPR();
+    fetchData();
   }, [number]);
 
   return (
@@ -74,23 +93,39 @@ export default function TeamPage() {
         <div
           style={{
             backgroundColor: "#1e1e1e",
-            padding: "40px",
+            padding: "30px",
             borderRadius: "12px",
-            textAlign: "center",
-            maxWidth: "400px",
             width: "100%",
-            boxShadow: "0 0 20px rgba(255, 255, 255, 0.05)",
+            maxWidth: "600px",
+            boxShadow: "0 0 10px rgba(255,255,255,0.05)",
           }}
         >
-          <h1 style={{ marginBottom: "16px", fontWeight: "600" }}>
-            Team #{number}
-          </h1>
           {loading ? (
-            <p style={{ fontSize: "1.2rem" }}>Loading OPR...</p>
+            <p style={{ fontSize: "1.2rem", textAlign: "center" }}>Loading...</p>
+          ) : team ? (
+            <>
+              <h1 style={{ marginBottom: "0.3em", fontSize: "1.8rem", fontWeight: "600" }}>
+                {number} – {team.name}
+              </h1>
+              <p style={{ margin: "0.3em 0" }}>{team.schoolName}</p>
+              {team.location && (
+                <p style={{ margin: "0.3em 0", fontSize: "0.95rem", color: "#aaa" }}>
+                  {team.location.city}, {team.location.state}, {team.location.country}
+                </p>
+              )}
+              <p style={{ margin: "0.3em 0", fontSize: "0.9rem", color: "#888" }}>
+                Rookie Year: {team.rookieYear}
+              </p>
+              <hr style={{ margin: "1.5em 0", borderColor: "#333" }} />
+              <p style={{ fontSize: "1.3rem", textAlign: "center", fontWeight: "500" }}>
+                Total OPR:{" "}
+                <span style={{ fontWeight: "600" }}>
+                  {typeof opr === "number" ? opr.toFixed(2) : opr}
+                </span>
+              </p>
+            </>
           ) : (
-            <p style={{ fontSize: "2rem", fontWeight: "600" }}>
-              Total OPR: {typeof opr === "number" ? opr.toFixed(2) : opr}
-            </p>
+            <p style={{ textAlign: "center" }}>Team not found.</p>
           )}
         </div>
       </main>
