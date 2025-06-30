@@ -69,7 +69,12 @@ export default function TeamPage() {
           dc: data.quickStats?.dc?.value,
           eg: data.quickStats?.eg?.value,
         });
-        setEvents(data.events ?? []);
+
+        const sortedEvents = (data.events ?? []).sort((a, b) => {
+          return new Date(a.event.start) - new Date(b.event.start);
+        });
+
+        setEvents(sortedEvents);
       } else {
         setTeam(null);
         setStats({});
@@ -170,7 +175,6 @@ export default function TeamPage() {
                 </p>
               </div>
 
-              {/* Events section */}
               {events.length > 0 && (
                 <>
                   <hr style={{ margin: "1.5em 0", borderColor: "#333" }} />
