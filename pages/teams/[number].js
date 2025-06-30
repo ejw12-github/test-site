@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 export default function TeamPage() {
   const router = useRouter();
   const { number } = router.query;
-  const [oprSum, setOprSum] = useState(null);
+  const [opr, setOpr] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,13 +16,9 @@ export default function TeamPage() {
       const query = `
         query GetTeamOPR($number: Int!) {
           teamByNumber(number: $number) {
-            events(season: 2024) {
-              stats {
-                ... on TeamEventStats2024 {
-                  opr {
-                    totalPoints
-                  }
-                }
+            quickStats(season: 2024) {
+              tot {
+                value
               }
             }
           }
@@ -36,13 +32,9 @@ export default function TeamPage() {
       });
 
       const json = await res.json();
-      const events = json?.data?.teamByNumber?.events ?? [];
+      const value = json?.data?.teamByNumber?.quickStats?.tot?.value;
 
-      const total = events
-        .map((e) => e.stats?.opr?.totalPoints ?? 0)
-        .reduce((acc, v) => acc + v, 0);
-
-      setOprSum(total);
+      setOpr(value ?? "N/A");
       setLoading(false);
     }
 
@@ -55,7 +47,9 @@ export default function TeamPage() {
       {loading ? (
         <p>Loading OPR...</p>
       ) : (
-        <p style={{ fontSize: "2rem" }}>Total OPR: {oprSum.toFixed(2)}</p>
+        <p style={{ fontSize: "2rem" }}>
+          Total OPR: {typeof opr === "number" ? opr.toFixed(2) : opr}
+        </p>
       )}
     </div>
   );
