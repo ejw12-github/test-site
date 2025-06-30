@@ -7,6 +7,7 @@ export default function TeamPage() {
   const { number } = router.query;
   const [team, setTeam] = useState(null);
   const [stats, setStats] = useState({});
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +34,17 @@ export default function TeamPage() {
               dc { value }
               eg { value }
             }
+            events(season: 2024) {
+              event {
+                name
+                start
+                location {
+                  city
+                  state
+                  country
+                }
+              }
+            }
           }
         }
       `;
@@ -57,9 +69,11 @@ export default function TeamPage() {
           dc: data.quickStats?.dc?.value,
           eg: data.quickStats?.eg?.value,
         });
+        setEvents(data.events ?? []);
       } else {
         setTeam(null);
         setStats({});
+        setEvents([]);
       }
 
       setLoading(false);
@@ -73,6 +87,15 @@ export default function TeamPage() {
     fontSize: "0.95rem",
     color: "#aaa",
   };
+
+  function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
 
   return (
     <>
@@ -146,6 +169,32 @@ export default function TeamPage() {
                   {typeof stats.eg === "number" ? stats.eg.toFixed(2) : "N/A"}
                 </p>
               </div>
+
+              {/* Events section */}
+              {events.length > 0 && (
+                <>
+                  <hr style={{ margin: "1.5em 0", borderColor: "#333" }} />
+                  <h2 style={{ fontSize: "1.2rem", marginBottom: "0.5em" }}>
+                    2024 Events
+                  </h2>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                    {events.map((e, idx) => (
+                      <li
+                        key={idx}
+                        style={{
+                          marginBottom: "0.8em",
+                          fontSize: "0.95rem",
+                          color: "#ccc",
+                        }}
+                      >
+                        <strong>{e.event.name}</strong> — {formatDate(e.event.start)} —{" "}
+                        {e.event.location.city}, {e.event.location.state},{" "}
+                        {e.event.location.country}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </>
           ) : (
             <p style={{ textAlign: "center" }}>Team not found.</p>
