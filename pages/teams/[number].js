@@ -6,7 +6,7 @@ export default function TeamPage() {
   const router = useRouter();
   const { number } = router.query;
   const [team, setTeam] = useState(null);
-  const [opr, setOpr] = useState(null);
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,9 +28,10 @@ export default function TeamPage() {
               country
             }
             quickStats(season: 2024) {
-              tot {
-                value
-              }
+              tot { value }
+              auto { value }
+              dc { value }
+              eg { value }
             }
           }
         }
@@ -47,12 +48,18 @@ export default function TeamPage() {
 
       const json = await res.json();
       const data = json?.data?.teamByNumber;
-      if (!data) {
-        setTeam(null);
-        setOpr(null);
-      } else {
+
+      if (data) {
         setTeam(data);
-        setOpr(data.quickStats?.tot?.value ?? "N/A");
+        setStats({
+          total: data.quickStats?.tot?.value,
+          auto: data.quickStats?.auto?.value,
+          dc: data.quickStats?.dc?.value,
+          eg: data.quickStats?.eg?.value,
+        });
+      } else {
+        setTeam(null);
+        setStats({});
       }
 
       setLoading(false);
@@ -60,6 +67,12 @@ export default function TeamPage() {
 
     fetchData();
   }, [number]);
+
+  const infoStyle = {
+    margin: "0.3em 0",
+    fontSize: "0.95rem",
+    color: "#aaa",
+  };
 
   return (
     <>
@@ -107,22 +120,32 @@ export default function TeamPage() {
               <h1 style={{ marginBottom: "0.3em", fontSize: "1.8rem", fontWeight: "600" }}>
                 {number} – {team.name}
               </h1>
-              <p style={{ margin: "0.3em 0" }}>{team.schoolName}</p>
-              {team.location && (
-                <p style={{ margin: "0.3em 0", fontSize: "0.95rem", color: "#aaa" }}>
-                  {team.location.city}, {team.location.state}, {team.location.country}
-                </p>
-              )}
-              <p style={{ margin: "0.3em 0", fontSize: "0.9rem", color: "#888" }}>
-                Rookie Year: {team.rookieYear}
+              <p style={infoStyle}>{team.schoolName}</p>
+              <p style={infoStyle}>
+                {team.location.city}, {team.location.state}, {team.location.country}
               </p>
+              <p style={infoStyle}>Rookie Year: {team.rookieYear}</p>
+
               <hr style={{ margin: "1.5em 0", borderColor: "#333" }} />
-              <p style={{ fontSize: "1.3rem", textAlign: "center", fontWeight: "500" }}>
-                Total OPR:{" "}
-                <span style={{ fontWeight: "600" }}>
-                  {typeof opr === "number" ? opr.toFixed(2) : opr}
-                </span>
-              </p>
+
+              <div style={{ fontSize: "1rem", textAlign: "left" }}>
+                <p>
+                  <strong>Total OPR:</strong>{" "}
+                  {typeof stats.total === "number" ? stats.total.toFixed(2) : "N/A"}
+                </p>
+                <p>
+                  <strong>Auto:</strong>{" "}
+                  {typeof stats.auto === "number" ? stats.auto.toFixed(2) : "N/A"}
+                </p>
+                <p>
+                  <strong>TeleOP:</strong>{" "}
+                  {typeof stats.dc === "number" ? stats.dc.toFixed(2) : "N/A"}
+                </p>
+                <p>
+                  <strong>Endgame:</strong>{" "}
+                  {typeof stats.eg === "number" ? stats.eg.toFixed(2) : "N/A"}
+                </p>
+              </div>
             </>
           ) : (
             <p style={{ textAlign: "center" }}>Team not found.</p>
