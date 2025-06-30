@@ -4,7 +4,7 @@ export default function App({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <title>FTC Scouting App</title>
+        <title>FTCMetrics</title>
       </Head>
       <Component {...pageProps} />
     </>
