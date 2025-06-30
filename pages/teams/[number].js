@@ -71,7 +71,7 @@ export default function TeamPage() {
         });
 
         const sortedEvents = (data.events ?? []).sort((a, b) => {
-          return new Date(a.event.start) - new Date(b.event.start);
+          return new Date(b.event.start) - new Date(a.event.start); // Latest to oldest
         });
 
         setEvents(sortedEvents);
@@ -86,6 +86,14 @@ export default function TeamPage() {
 
     fetchData();
   }, [number]);
+
+  const boxStyle = {
+    backgroundColor: "#1e1e1e",
+    padding: "20px",
+    borderRadius: "12px",
+    marginBottom: "20px",
+    boxShadow: "0 0 10px rgba(255,255,255,0.05)",
+  };
 
   const infoStyle = {
     margin: "0.3em 0",
@@ -126,79 +134,48 @@ export default function TeamPage() {
         style={{
           minHeight: "100vh",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          padding: "20px",
+          justifyContent: "flex-start",
+          padding: "40px 20px",
         }}
       >
-        <div
-          style={{
-            backgroundColor: "#1e1e1e",
-            padding: "30px",
-            borderRadius: "12px",
-            width: "100%",
-            maxWidth: "600px",
-            boxShadow: "0 0 10px rgba(255,255,255,0.05)",
-          }}
-        >
+        <div style={{ width: "100%", maxWidth: "600px" }}>
           {loading ? (
             <p style={{ fontSize: "1.2rem", textAlign: "center" }}>Loading...</p>
           ) : team ? (
             <>
-              <h1 style={{ marginBottom: "0.3em", fontSize: "1.8rem", fontWeight: "600" }}>
-                {number} – {team.name}
-              </h1>
-              <p style={infoStyle}>{team.schoolName}</p>
-              <p style={infoStyle}>
-                {team.location.city}, {team.location.state}, {team.location.country}
-              </p>
-              <p style={infoStyle}>Rookie Year: {team.rookieYear}</p>
-
-              <hr style={{ margin: "1.5em 0", borderColor: "#333" }} />
-
-              <div style={{ fontSize: "1rem", textAlign: "left" }}>
-                <p>
-                  <strong>Total OPR:</strong>{" "}
-                  {typeof stats.total === "number" ? stats.total.toFixed(2) : "N/A"}
+              {/* Team Info Box */}
+              <div style={boxStyle}>
+                <h1 style={{ marginBottom: "0.3em", fontSize: "1.8rem", fontWeight: "600" }}>
+                  {number} – {team.name}
+                </h1>
+                <p style={infoStyle}>{team.schoolName}</p>
+                <p style={infoStyle}>
+                  {team.location.city}, {team.location.state}, {team.location.country}
                 </p>
-                <p>
-                  <strong>Auto:</strong>{" "}
-                  {typeof stats.auto === "number" ? stats.auto.toFixed(2) : "N/A"}
-                </p>
-                <p>
-                  <strong>TeleOP:</strong>{" "}
-                  {typeof stats.dc === "number" ? stats.dc.toFixed(2) : "N/A"}
-                </p>
-                <p>
-                  <strong>Endgame:</strong>{" "}
-                  {typeof stats.eg === "number" ? stats.eg.toFixed(2) : "N/A"}
-                </p>
+                <p style={infoStyle}>Rookie Year: {team.rookieYear}</p>
               </div>
 
-              {events.length > 0 && (
-                <>
-                  <hr style={{ margin: "1.5em 0", borderColor: "#333" }} />
-                  <h2 style={{ fontSize: "1.2rem", marginBottom: "0.5em" }}>
-                    2024 Events
-                  </h2>
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                    {events.map((e, idx) => (
-                      <li
-                        key={idx}
-                        style={{
-                          marginBottom: "0.8em",
-                          fontSize: "0.95rem",
-                          color: "#ccc",
-                        }}
-                      >
-                        <strong>{e.event.name}</strong> — {formatDate(e.event.start)} —{" "}
-                        {e.event.location.city}, {e.event.location.state},{" "}
-                        {e.event.location.country}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+              {/* OPR Stats Box */}
+              <div style={boxStyle}>
+                <h2 style={{ fontSize: "1.2rem", marginBottom: "1em" }}>OPR Breakdown</h2>
+                <p><strong>Total OPR:</strong> {typeof stats.total === "number" ? stats.total.toFixed(2) : "N/A"}</p>
+                <p><strong>Auto:</strong> {typeof stats.auto === "number" ? stats.auto.toFixed(2) : "N/A"}</p>
+                <p><strong>TeleOP:</strong> {typeof stats.dc === "number" ? stats.dc.toFixed(2) : "N/A"}</p>
+                <p><strong>Endgame:</strong> {typeof stats.eg === "number" ? stats.eg.toFixed(2) : "N/A"}</p>
+              </div>
+
+              {/* Events */}
+              {events.map((e, idx) => (
+                <div key={idx} style={boxStyle}>
+                  <h3 style={{ margin: "0 0 0.4em 0" }}>{e.event.name}</h3>
+                  <p style={infoStyle}>📅 {formatDate(e.event.start)}</p>
+                  <p style={infoStyle}>
+                    📍 {e.event.location.city}, {e.event.location.state}, {e.event.location.country}
+                  </p>
+                </div>
+              ))}
             </>
           ) : (
             <p style={{ textAlign: "center" }}>Team not found.</p>
