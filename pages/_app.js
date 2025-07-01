@@ -8,6 +8,7 @@ export default function App({ Component, pageProps }) {
         <title>FTCMetrics</title>
       </Head>
       <Component {...pageProps} />
+      <Analytics />
     </>
   );
 }
